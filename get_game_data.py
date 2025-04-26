@@ -48,7 +48,18 @@ def get_name_from_paths(paths, to_strip):
     
     return new_names
 
-    
+
+# if there is already copied version is present then remove it
+# again copy from the source to the destination path    
+def copy_and_overwrite(source, dest): 
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree(source, dest)
+
+
+
+
+
 
 def main(source, target): 
     print(source, target)
@@ -64,6 +75,10 @@ def main(source, target):
     print(new_game_dirs);
 
     create_dir(path=target_path)
+    copy_and_overwrite(source_path, target_path)
+
+
+
 
 
 
