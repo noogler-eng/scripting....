@@ -6,6 +6,10 @@ import sys      # halping to taking command line arguments
 
 
 FAME_DIR_PATTERN = "game"
+GAME_CODE_EXT = ".go"
+GAME_COMPILE_CMD = [
+    "go", "build"
+]
 
 
 def find_all_games_paths(source): 
@@ -57,8 +61,46 @@ def copy_and_overwrite(source, dest):
     shutil.copytree(source, dest)
 
 
+def make_json_data_file(path, game_dirs):
+    data = {
+        "gameNames": game_dirs,
+        "numbers": len(game_dirs)
+    }
+    
+    # this is a context manager
+    # here w will be smaller .....
+    with open(path, "w") as f:
+        # this will dump our json data as a string
+        json.dump(data, f);
 
 
+def run_commands(command, path):
+    os.chdir(path)
+    # stdout=PIPE, stdin=PIPE, is the places where they take input and split out output
+    # PIPE is type of bridge between input and ouput and commands
+    result = run(command, stdout=PIPE, stdin=PIPE, universal_newlines=True)
+    print(result)
+
+
+def compile_game_code(path):
+    code_file_name = None
+    for _, _, files in os.walk(path):
+        for file in files: 
+            if file.endswith(GAME_CODE_EXT):
+                code_file_name = file
+                print('file printing', code_file_name, end="\n")
+                break
+        break
+
+    if code_file_name is None: 
+        return
+    
+    print('compiling:: ', code_file_name)
+
+    command =  GAME_COMPILE_CMD + [code_file_name]
+    run_commands(command, path)
+
+    
 
 
 def main(source, target): 
@@ -72,12 +114,19 @@ def main(source, target):
     
     game_paths = find_all_games_paths(source_path);
     new_game_dirs = get_name_from_paths(game_paths, "_game")
-    print(new_game_dirs);
+    # print(new_game_dirs);
 
     create_dir(path=target_path)
-    copy_and_overwrite(source_path, target_path)
 
-
+    print('printing the zip functionality')
+    for src, dest in zip(game_paths, new_game_dirs):
+        dest_path = os.path.join(target_path, dest)
+        copy_and_overwrite(src, dest_path)
+    
+    # json path
+    json_path = os.path.join(target_path, "metadata.json");
+    make_json_data_file(json_path ,new_game_dirs)
+    compile_game_code(os.path.join(target_path, new_game_dirs[0]))
 
 
 
